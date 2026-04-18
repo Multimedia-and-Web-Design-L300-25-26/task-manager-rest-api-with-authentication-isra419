@@ -1,16 +1,31 @@
 import jwt from "jsonwebtoken";
-import User from "../models/User.js";
 
+const authMiddleware = (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
 
-// 1. Extract token from Authorization header
-// 2. Verify token
-// 3. Find user
-// 4. Attach user to req.user
-// 5. Call next()
-// 6. If invalid → return 401
+    // Check if Authorization header exists
+    if (!authHeader) {
+      return res.status(401).json({ message: "Authorization header missing" });
+    }
 
-const authMiddleware = async (req, res, next) => {
-  //  implement here
+    // Check Bearer token format
+    const token = authHeader.split(" ")[1];
+
+    if (!token) {
+      return res.status(401).json({ message: "Token missing" });
+    }
+
+    // Verify JWT token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Attach user information to request
+    req.user = decoded;
+
+    next();
+  } catch (error) {
+    return res.status(401).json({ message: "Invalid or expired token" });
+  }
 };
 
 export default authMiddleware;
